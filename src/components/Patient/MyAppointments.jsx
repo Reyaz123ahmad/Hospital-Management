@@ -446,7 +446,7 @@ const MyAppointments = () => {
                           {apt.status}
                         </span>
                         <div className="flex gap-2">
-                          <Button size="sm" variant="outline" onClick={() => {
+                          <Button size="xs" variant="outline" onClick={() => {
                             setSelectedAppointment(apt)
                             setShowDetailsModal(true)
                           }}>
@@ -454,10 +454,10 @@ const MyAppointments = () => {
                           </Button>
                           {apt.status === 'confirmed' && (
                             <>
-                              <Button size="sm" variant="secondary" onClick={() => handleReschedule(apt)}>
+                              <Button size="xs" variant="secondary" onClick={() => handleReschedule(apt)}>
                                 <FaCalendarPlus /> Reschedule
                               </Button>
-                              <Button size="sm" variant="danger" onClick={() => {
+                              <Button size="xs" variant="danger" onClick={() => {
                                 setSelectedAppointment(apt)
                                 setShowCancelModal(true)
                               }}>
