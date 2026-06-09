@@ -1,6 +1,6 @@
 // src/services/emailService.js
 const nodemailer = require('nodemailer');
-
+require('dotenv').config()
 const transporter = nodemailer.createTransport({
   host: process.env.EMAIL_HOST,
   port: process.env.EMAIL_PORT,
@@ -193,6 +193,110 @@ class EmailService {
     `;
     await this.sendEmail(email, 'Refund Confirmation - Hospital Management', html);
     }
+
+    // Radiology Test Created
+  async sendRadiologyTestCreated(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <div style="background:#4f46e5;color:white;padding:20px;text-align:center"><h2>🩻 Radiology Test Scheduled</h2></div>
+      <p>Dear ${name},</p><p>A radiology test has been prescribed by your doctor.</p>
+      <div style="background:#f3f4f6;padding:15px;text-align:center;border-radius:10px;margin:20px 0">
+        <strong style="font-size:24px">Token: ${details.tokenNumber}</strong>
+      </div>
+      <div style="background:#f9fafb;padding:15px;border-radius:10px">
+        <strong>Test:</strong> ${details.testType} - ${details.testSubType || ''}<br/>
+        <strong>Center:</strong> ${details.radiologyCenter}<br/>
+        <strong>Address:</strong> ${details.centerAddress}<br/>
+        <strong>Phone:</strong> ${details.centerPhone || 'N/A'}<br/>
+        ${details.scheduledDate ? `<strong>Date:</strong> ${new Date(details.scheduledDate).toLocaleDateString()}<br/>` : ''}
+        ${details.scheduledTime ? `<strong>Time:</strong> ${details.scheduledTime}<br/>` : ''}
+        ${details.fastingRequired ? `<strong>Fasting Required:</strong> ${details.fastingHours} hours<br/>` : ''}
+        ${details.pregnancyWarning ? `<strong>⚠️ Pregnancy Warning:</strong> Inform the technician if pregnant<br/>` : ''}
+        ${details.preparationInstructions ? `<strong>Instructions:</strong> ${details.preparationInstructions}<br/>` : ''}
+      </div>
+      <a href="http://localhost:3000/patient/radiology-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;margin-top:20px">Track Status</a>
+    </div>`;
+    await this.sendEmail(email, 'Radiology Test Scheduled - HospitalMS', html);
+  }
+
+  // Status Update
+  async sendRadiologyStatusUpdate(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <h2 style="color:#4f46e5">🩻 Status Update</h2><p>Dear ${name},</p>
+      <p>Your radiology test <strong>${details.testName}</strong> status: <strong>${details.newStatus}</strong></p>
+      ${details.notes ? `<p>${details.notes}</p>` : ''}
+      <a href="http://localhost:3000/patient/radiology-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">Track Status</a>
+    </div>`;
+    await this.sendEmail(email, `Radiology Test: ${details.newStatus}`, html);
+  }
+
+  // Report Ready
+  async sendRadiologyReportReady(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <div style="background:#22c55e;color:white;padding:20px;text-align:center"><h2>✅ Radiology Report Ready</h2></div>
+      <p>Dear ${name},</p><p>Your radiology report for <strong>${details.testName}</strong> is ready.</p>
+      <p><strong>Report ID:</strong> ${details.reportId}</p>
+      <a href="http://localhost:3000/patient/radiology-reports" style="background:#22c55e;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">View Report</a>
+    </div>`;
+    await this.sendEmail(email, 'Radiology Report Ready - HospitalMS', html);
+  }
+
+  // Report to Doctor
+  async sendRadiologyReportToDoctor(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <h2 style="color:#4f46e5">🩻 Radiology Report Generated</h2><p>Dear Dr. ${name},</p>
+      <p>Radiology report for patient <strong>${details.patientName}</strong> is ready.</p>
+      <p><strong>Test:</strong> ${details.testName}<br/><strong>Report ID:</strong> ${details.reportId}</p>
+      <a href="http://localhost:3000/doctor/radiology-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">View Report</a>
+    </div>`;
+    await this.sendEmail(email, `Radiology Report - ${details.patientName}`, html);
+  }
+
+
+
+  // Lab Test Created
+  async sendLabTestCreated(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <div style="background:#4f46e5;color:white;padding:20px;text-align:center"><h2>Lab Test Scheduled</h2></div>
+      <p>Dear ${name},</p><p>A lab test has been prescribed by your doctor.</p>
+      <div style="background:#f3f4f6;padding:15px;text-align:center;border-radius:10px;margin:20px 0"><strong style="font-size:24px">Token: ${details.tokenNumber}</strong></div>
+      <div style="background:#f9fafb;padding:15px;border-radius:10px"><strong>Test:</strong> ${details.testName}<br/><strong>Lab:</strong> ${details.labName}<br/><strong>Address:</strong> ${details.labAddress}<br/>${details.fastingRequired ? `<strong>Fasting:</strong> ${details.fastingHours} hours<br/>` : ''}${details.instructions ? `<strong>Instructions:</strong> ${details.instructions}` : ''}</div>
+      <a href="http://localhost:3000/patient/lab-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px;display:inline-block;margin-top:20px">Track Status</a>
+    </div>`;
+    await this.sendEmail(email, 'Lab Test Scheduled - HospitalMS', html);
+  }
+
+  // Status Update
+  async sendLabTestStatusUpdate(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <h2 style="color:#4f46e5">Status Updated</h2><p>Dear ${name},</p>
+      <p>Your test <strong>${details.testName}</strong> status changed from <strong>${details.oldStatus}</strong> to <strong>${details.newStatus}</strong>.</p>
+      ${details.notes ? `<p>Note: ${details.notes}</p>` : ''}
+      <a href="http://localhost:3000/patient/lab-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">Track Status</a>
+    </div>`;
+    await this.sendEmail(email, `Lab Test Status: ${details.newStatus}`, html);
+  }
+
+  // Report Ready
+  async sendLabReportReady(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <div style="background:#22c55e;color:white;padding:20px;text-align:center"><h2>✅ Lab Report Ready</h2></div>
+      <p>Dear ${name},</p><p>Your report for <strong>${details.testName}</strong> is ready.</p>
+      <p><strong>Report ID:</strong> ${details.reportId}</p>
+      <a href="http://localhost:3000/patient/reports" style="background:#22c55e;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">View Report</a>
+    </div>`;
+    await this.sendEmail(email, 'Lab Report Ready - HospitalMS', html);
+  }
+
+  // Report to Doctor
+  async sendLabReportToDoctor(email, name, details) {
+    const html = `<div style="font-family:Arial;max-width:600px;margin:auto;padding:20px">
+      <h2 style="color:#4f46e5">Lab Report Generated</h2><p>Dear Dr. ${name},</p>
+      <p>Lab report for patient <strong>${details.patientName}</strong> is ready.</p>
+      <p><strong>Test:</strong> ${details.testName}<br/><strong>Report ID:</strong> ${details.reportId}</p>
+      <a href="http://localhost:3000/doctor/lab-tests" style="background:#4f46e5;color:white;padding:10px 20px;text-decoration:none;border-radius:5px">View Report</a>
+    </div>`;
+    await this.sendEmail(email, `Lab Report Ready - ${details.patientName}`, html);
+  }
 }
 
 module.exports = new EmailService();

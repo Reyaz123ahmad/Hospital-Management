@@ -1,6 +1,7 @@
 
 
-// src/components/Payment/PaymentPage.jsx
+
+
 import React, { useState, useEffect, useCallback, useRef } from 'react'
 import { useParams, useNavigate, useLocation } from 'react-router-dom'
 import { motion } from 'framer-motion'
@@ -16,7 +17,9 @@ const PaymentPage = () => {
   const navigate = useNavigate()
   const location = useLocation()
   
-  // ✅ Separate state for initial data from location
+  // ✅ Get appointment ID from URL or storage
+  const finalAppointmentId = appointmentId || localStorage.getItem('currentAppointmentId') || sessionStorage.getItem('appointmentId')
+  
   const initialAppointment = location.state?.appointment || null
   const initialOrder = location.state?.order || null
   
@@ -25,16 +28,14 @@ const PaymentPage = () => {
   const [loading, setLoading] = useState(!initialAppointment)
   const [processing, setProcessing] = useState(false)
   
-  // ✅ Use ref to prevent multiple API calls
   const hasFetched = useRef(false)
 
-  // ✅ Memoized fetch function - no setState inside effect directly
   const fetchAppointmentDetails = useCallback(async () => {
     if (hasFetched.current) return
     hasFetched.current = true
     
     try {
-      const response = await paymentService.getPaymentStatus(appointmentId)
+      const response = await paymentService.getPaymentStatus(finalAppointmentId)
       if (response?.data?.appointment) {
         setAppointment(response.data.appointment)
       }
@@ -45,9 +46,8 @@ const PaymentPage = () => {
     } finally {
       setLoading(false)
     }
-  }, [appointmentId, navigate])
+  }, [finalAppointmentId, navigate])
 
-  // ✅ Effect with proper condition - only runs when needed
   useEffect(() => {
     let isMounted = true
     
@@ -60,25 +60,16 @@ const PaymentPage = () => {
     }
     
     loadData()
-    
-    return () => {
-      isMounted = false
-    }
+    return () => { isMounted = false }
   }, [initialAppointment, fetchAppointmentDetails])
 
-  // ✅ Load Razorpay script once
   useEffect(() => {
     let script = document.querySelector('script[src="https://checkout.razorpay.com/v1/checkout.js"]')
-    
     if (!script) {
       script = document.createElement('script')
       script.src = 'https://checkout.razorpay.com/v1/checkout.js'
       script.async = true
       document.body.appendChild(script)
-    }
-    
-    return () => {
-      // Don't remove script - it might be needed for other payments
     }
   }, [])
 
@@ -93,12 +84,11 @@ const PaymentPage = () => {
     try {
       let orderData = order
       if (!orderData) {
-        const orderResponse = await paymentService.createOrder(appointmentId)
+        const orderResponse = await paymentService.createOrder(finalAppointmentId)
         orderData = orderResponse.data.order
         setOrder(orderData)
       }
 
-      // Check if Razorpay is loaded
       if (!window.Razorpay) {
         toast.error('Payment gateway is loading. Please try again.')
         setProcessing(false)
@@ -110,7 +100,7 @@ const PaymentPage = () => {
         amount: orderData.amount,
         currency: orderData.currency,
         name: 'Hospital Management System',
-        description: `Appointment Booking - ${appointmentId}`,
+        description: `Appointment Booking - ${finalAppointmentId}`,
         order_id: orderData.id,
         handler: async (response) => {
           try {
@@ -118,10 +108,12 @@ const PaymentPage = () => {
               razorpay_order_id: response.razorpay_order_id,
               razorpay_payment_id: response.razorpay_payment_id,
               razorpay_signature: response.razorpay_signature,
-              appointmentId: appointmentId
+              appointmentId: finalAppointmentId
             })
             if (verifyResponse.data.success) {
               toast.success('Payment successful! Appointment confirmed.')
+              localStorage.removeItem('currentAppointmentId')
+              sessionStorage.removeItem('appointmentId')
               navigate('/patient/appointments')
             } else {
               toast.error('Payment verification failed')
@@ -135,9 +127,7 @@ const PaymentPage = () => {
           name: appointment?.patientId?.name || '',
           email: appointment?.patientId?.email || '',
         },
-        theme: {
-          color: '#4f46e5'
-        },
+        theme: { color: '#4f46e5' },
         modal: {
           ondismiss: () => {
             setProcessing(false)
@@ -156,20 +146,14 @@ const PaymentPage = () => {
     }
   }
 
-  // Loading state
-  if (loading) {
-    return <LoadingSpinner fullScreen />
-  }
+  if (loading) return <LoadingSpinner fullScreen />
   
-  // No appointment state
   if (!appointment) {
     return (
       <div className="min-h-screen flex items-center justify-center">
         <div className="text-center">
           <p className="text-gray-500 mb-4">No appointment details available</p>
-          <Button onClick={() => navigate('/patient/appointments')}>
-            Go to Appointments
-          </Button>
+          <Button onClick={() => navigate('/patient/appointments')}>Go to Appointments</Button>
         </div>
       </div>
     )
@@ -180,27 +164,17 @@ const PaymentPage = () => {
   return (
     <div className="min-h-screen bg-gray-50 py-12">
       <div className="container mx-auto px-4 max-w-3xl">
-        <button 
-          onClick={() => navigate(-1)} 
-          className="flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-6 transition-colors"
-        >
+        <button onClick={() => navigate(-1)} className="flex items-center gap-2 text-gray-600 hover:text-primary-600 mb-6">
           <FaArrowLeft /> Back
         </button>
 
-        <motion.div
-          initial={{ opacity: 0, y: 20 }}
-          animate={{ opacity: 1, y: 0 }}
-          transition={{ duration: 0.3 }}
-          className="bg-white rounded-2xl shadow-xl overflow-hidden"
-        >
-          {/* Header */}
+        <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-2xl shadow-xl overflow-hidden">
           <div className="bg-gradient-to-r from-primary-500 to-primary-700 p-6 text-white text-center">
             <h1 className="text-2xl font-bold">Complete Payment</h1>
             <p className="text-white/80 mt-1">Secure checkout to confirm your appointment</p>
           </div>
 
           <div className="p-6">
-            {/* Appointment Summary */}
             <div className="bg-gray-50 rounded-xl p-4 mb-6">
               <h2 className="font-semibold text-gray-800 mb-3">Appointment Summary</h2>
               <div className="space-y-2 text-sm">
@@ -214,15 +188,11 @@ const PaymentPage = () => {
                 </div>
                 <div className="flex justify-between">
                   <span className="text-gray-500">Date & Time</span>
-                  <span>
-                    {appointment?.date ? formatDate(appointment.date) : 'N/A'} 
-                    {appointment?.timeSlot ? ` at ${appointment.timeSlot}` : ''}
-                  </span>
+                  <span>{appointment?.date ? formatDate(appointment.date) : 'N/A'} {appointment?.timeSlot ? `at ${appointment.timeSlot}` : ''}</span>
                 </div>
               </div>
             </div>
 
-            {/* Payment Details */}
             <div className="border rounded-xl p-4 mb-6">
               <h2 className="font-semibold text-gray-800 mb-3">Payment Details</h2>
               <div className="space-y-2">
@@ -237,25 +207,16 @@ const PaymentPage = () => {
                 <div className="border-t pt-2 mt-2">
                   <div className="flex justify-between">
                     <span className="font-bold">Total Amount</span>
-                    <span className="font-bold text-primary-600 text-xl">
-                      {formatCurrency(totalAmount)}
-                    </span>
+                    <span className="font-bold text-primary-600 text-xl">{formatCurrency(totalAmount)}</span>
                   </div>
                 </div>
               </div>
             </div>
 
-            {/* Payment Methods */}
             <div className="mb-6">
-              <h2 className="font-semibold text-gray-800 mb-3">Select Payment Method</h2>
-              <div className="border rounded-xl p-4 bg-green-50 border-green-200 cursor-pointer hover:bg-green-100 transition-colors">
+              <div className="border rounded-xl p-4 bg-green-50 border-green-200">
                 <div className="flex items-center gap-3">
-                  <input 
-                    type="radio" 
-                    checked 
-                    readOnly 
-                    className="w-4 h-4 text-green-600 accent-green-600" 
-                  />
+                  <input type="radio" checked readOnly className="w-4 h-4 text-green-600 accent-green-600" />
                   <FaCreditCard className="text-green-600 text-xl" />
                   <div>
                     <p className="font-medium text-green-800">Credit/Debit Card</p>
@@ -265,21 +226,12 @@ const PaymentPage = () => {
               </div>
             </div>
 
-            {/* Secure Payment Note */}
             <div className="flex items-center justify-center gap-2 text-sm text-gray-500 mb-6">
               <FaLock className="text-gray-400" />
               <span>100% Secure Payments. Your data is encrypted.</span>
             </div>
 
-            {/* Pay Button */}
-            <Button
-              onClick={handlePayment}
-              variant="primary"
-              size="lg"
-              fullWidth
-              disabled={processing}
-              icon={processing ? FaSpinner : FaRupeeSign}
-            >
+            <Button onClick={handlePayment} variant="primary" size="lg" fullWidth disabled={processing} icon={processing ? FaSpinner : FaRupeeSign}>
               {processing ? 'Processing...' : `Pay ${formatCurrency(totalAmount)}`}
             </Button>
 
@@ -294,3 +246,7 @@ const PaymentPage = () => {
 }
 
 export default PaymentPage
+
+
+
+

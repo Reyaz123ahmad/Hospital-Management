@@ -6,7 +6,12 @@ const User = require('../models/User');
 const slotService = require('../services/slotService');
 const emailService = require('../services/emailService');
 const { DOCTOR_TIMINGS } = require('../config/constants');
-
+const LabTest = require('../models/LabTest');
+const LabReport = require('../models/LabReport');
+const RadiologyTest = require('../models/RadiologyTest');
+const RadiologyReport = require('../models/RadiologyReport');
+const LabTestStatus = require('../models/LabTestStatus')
+const RadiologyStatus = require('../models/RadiologyStatus')
 // Get all doctors with filters
 exports.getDoctors = async (req, res) => {
   try {
@@ -284,6 +289,91 @@ exports.getTopRatedDoctors = async (req, res) => {
       .populate('userId', 'name email phone');
     
     res.json({ success: true, doctors });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+
+
+
+
+// LAB TEST AUR RADIOLOGY
+// ==================== LAB TESTS (Doctor) ====================
+exports.createLabTest = async (req, res) => {
+  try {
+    const { patientId, testName, labName, instructions, fastingRequired, fastingHours } = req.body;
+    const doctor = await Doctor.findOne({ userId: req.user.id });
+    const tokenNumber = `LAB${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    
+    const test = await LabTest.create({
+      patientId, doctorId: doctor._id, testName, labName,
+      instructions, fastingRequired, fastingHours, tokenNumber, status: 'pending'
+    });
+    
+    res.status(201).json({ success: true, data: test });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getMyLabTests = async (req, res) => {
+  try {
+    const doctor = await Doctor.findOne({ userId: req.user.id });
+    const tests = await LabTest.find({ doctorId: doctor._id })
+      .populate('patientId', 'name email phone')
+      .sort('-createdAt');
+    res.json({ success: true, tests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getLabReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const report = await LabReport.findById(reportId).populate('patientId', 'name');
+    res.json({ success: true, report });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+// ==================== RADIOLOGY TESTS (Doctor) ====================
+exports.createRadiologyTest = async (req, res) => {
+  try {
+    const { patientId, testType, bodyPart, radiologyCenter, instructions } = req.body;
+    const doctor = await Doctor.findOne({ userId: req.user.id });
+    const tokenNumber = `RAD${Date.now()}${Math.floor(Math.random() * 1000)}`;
+    
+    const test = await RadiologyTest.create({
+      patientId, doctorId: doctor._id, testType, bodyPart,
+      radiologyCenter, instructions, tokenNumber, status: 'pending'
+    });
+    
+    res.status(201).json({ success: true, data: test });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getMyRadiologyTests = async (req, res) => {
+  try {
+    const doctor = await Doctor.findOne({ userId: req.user.id });
+    const tests = await RadiologyTest.find({ doctorId: doctor._id })
+      .populate('patientId', 'name email phone')
+      .sort('-createdAt');
+    res.json({ success: true, tests });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+exports.getRadiologyReport = async (req, res) => {
+  try {
+    const { reportId } = req.params;
+    const report = await RadiologyReport.findById(reportId).populate('patientId', 'name');
+    res.json({ success: true, report });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

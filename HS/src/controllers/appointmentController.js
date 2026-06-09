@@ -6,129 +6,8 @@ const slotService = require('../services/slotService');
 const emailService = require('../services/emailService');
 const razorpay = require('../config/razorpay');
 // Book appointment
-// exports.bookAppointment = async (req, res) => {
-//   try {
-//     const { doctorId, date, timeSlot, symptoms, notes } = req.body;
-    
-//     // Check if slot is available
-//     const isAvailable = await slotService.isSlotAvailable(doctorId, new Date(date), timeSlot);
-//     if (!isAvailable) {
-//       return res.status(400).json({ success: false, message: 'Slot not available' });
-//     }
-    
-//     // Get doctor details for fee
-//     const doctor = await Doctor.findById(doctorId).populate('userId', 'name');
-//     if (!doctor) {
-//       return res.status(404).json({ success: false, message: 'Doctor not found' });
-//     }
-    
-//     // Create appointment
-//     const appointment = await Appointment.create({
-//       patientId: req.user.id,
-//       doctorId,
-//       date: new Date(date),
-//       timeSlot,
-//       symptoms: symptoms || [],
-//       notes,
-//       amount: doctor.consultationFee,
-//       status: 'confirmed',
-//       paymentStatus: 'pending'
-//     });
-    
-//     // Book the slot
-//     await slotService.bookSlot(doctorId, new Date(date), timeSlot, req.user.id, appointment._id);
-    
-//     // Send confirmation email
-//     const patient = await User.findById(req.user.id);
-//     await emailService.sendPatientAppointmentConfirmation(
-//       patient.email,
-//       patient.name,
-//       {
-//         doctorName: doctor.userId.name,
-//         date: new Date(date).toLocaleDateString(),
-//         timeSlot,
-//         fee: doctor.consultationFee
-//       }
-//     );
-    
-//     res.status(201).json({
-//       success: true,
-//       message: 'Appointment booked successfully',
-//       appointment
-//     });
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
-// Add this to src/controllers/appointmentController.js
 
-// Book appointment with payment
-// exports.bookAppointment = async (req, res) => {
-//   try {
-//     const { doctorId, date, timeSlot, symptoms, notes } = req.body;
-    
-//     // Check if slot is available
-//     const isAvailable = await slotService.isSlotAvailable(doctorId, new Date(date), timeSlot);
-//     if (!isAvailable) {
-//       return res.status(400).json({ success: false, message: 'Slot not available' });
-//     }
-    
-//     // Get doctor details
-//     const doctor = await Doctor.findById(doctorId).populate('userId', 'name');
-//     if (!doctor) {
-//       return res.status(404).json({ success: false, message: 'Doctor not found' });
-//     }
-    
-//     // Create appointment with pending payment
-//     const appointment = await Appointment.create({
-//       patientId: req.user.id,
-//       doctorId,
-//       date: new Date(date),
-//       timeSlot,
-//       symptoms: symptoms || [],
-//       notes,
-//       amount: doctor.consultationFee,
-//       status: 'pending',
-//       paymentStatus: 'pending'
-//     });
-    
-//     // Book the slot temporarily (will be confirmed after payment)
-//     await slotService.bookSlot(doctorId, new Date(date), timeSlot, req.user.id, appointment._id);
-    
-//     // Create Razorpay order
-//     const razorpay = new Razorpay({
-//       key_id: process.env.RAZORPAY_KEY_ID,
-//       key_secret: process.env.RAZORPAY_KEY_SECRET
-//     });
-    
-//     const options = {
-//       amount: doctor.consultationFee * 100,
-//       currency: 'INR',
-//       receipt: `receipt_${appointment._id}`,
-//       notes: {
-//         appointmentId: appointment._id.toString()
-//       }
-//     };
-    
-//     const order = await razorpay.orders.create(options);
-//     appointment.razorpayOrderId = order.id;
-//     await appointment.save();
-    
-//     res.status(201).json({
-//       success: true,
-//       appointment,
-//       order: {
-//         id: order.id,
-//         amount: order.amount,
-//         currency: order.currency
-//       },
-//       key_id: process.env.RAZORPAY_KEY_ID
-//     });
-    
-//   } catch (error) {
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
+
 exports.bookAppointment = async (req, res) => {
   try {
     const { doctorId, date, timeSlot, symptoms, notes } = req.body;
@@ -175,7 +54,7 @@ exports.bookAppointment = async (req, res) => {
     
     appointment.razorpayOrderId = order.id;
     await appointment.save();
-    
+    console.log('📤 Sending response with appointment ID:', appointment._id);
     res.status(201).json({
       success: true,
       appointment: {

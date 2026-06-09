@@ -1,7 +1,8 @@
+
 // import React, { useState, useEffect } from 'react'
 // import { motion } from 'framer-motion'
 // import { Link } from 'react-router-dom'
-// import { FaCalendarAlt, FaUsers, FaRupeeSign, FaStar, FaClock, FaChevronRight, FaFilePrescription } from 'react-icons/fa'
+// import { FaCalendarAlt, FaUsers, FaRupeeSign, FaClock, FaChevronRight, FaFilePrescription } from 'react-icons/fa'
 // import { useAuth } from '../../hooks/useAuth'
 // import doctorService from '../../services/doctorService'
 // import LoadingSpinner from '../Common/LoadingSpinner'
@@ -14,47 +15,56 @@
 //     totalAppointments: 0,
 //     totalPatients: 0,
 //     totalRevenue: 0,
-//     rating: 0
 //   })
 //   const [todayAppointments, setTodayAppointments] = useState([])
 //   const [recentAppointments, setRecentAppointments] = useState([])
 //   const [loading, setLoading] = useState(true)
 
+//   // ✅ Cleanup flag ke saath Effect - fetchDashboardData ko ANDAR define kiya
 //   useEffect(() => {
-//     fetchDashboardData()
-//   }, [])
+//     let isMounted = true
+    
+//     const fetchDashboardData = async () => {
+//       setLoading(true)
+//       try {
+//         const [todayRes, allRes] = await Promise.all([
+//           doctorService.getTodayAppointments(),
+//           doctorService.getMyAppointments()
+//         ])
 
-//   const fetchDashboardData = async () => {
-//     setLoading(true)
-//     try {
-//       const [todayRes, allRes] = await Promise.all([
-//         doctorService.getTodayAppointments(),
-//         doctorService.getMyAppointments()
-//       ])
-
-//       const today = todayRes.data.appointments || []
-//       const all = allRes.data.appointments || []
-      
-//       setTodayAppointments(today.slice(0, 5))
-//       setRecentAppointments(all.slice(0, 5))
-      
-//       const uniquePatients = new Set(all.map(apt => apt.patientId?._id))
-//       const completed = all.filter(apt => apt.status === 'completed')
-//       const revenue = completed.reduce((sum, apt) => sum + (apt.amount || 0), 0)
-      
-//       setStats({
-//         todayAppointments: today.length,
-//         totalAppointments: all.length,
-//         totalPatients: uniquePatients.size,
-//         totalRevenue: revenue,
-//         rating: 4.5
-//       })
-//     } catch (error) {
-//       console.error('Error fetching dashboard data:', error)
-//     } finally {
-//       setLoading(false)
+//         if (isMounted) {
+//           const today = todayRes.data.appointments || []
+//           const all = allRes.data.appointments || []
+          
+//           setTodayAppointments(today.slice(0, 5))
+//           setRecentAppointments(all.slice(0, 5))
+          
+//           const uniquePatients = new Set(all.map(apt => apt.patientId?._id))
+//           const completed = all.filter(apt => apt.status === 'completed')
+//           const revenue = completed.reduce((sum, apt) => sum + (apt.amount || 0), 0)
+          
+//           setStats({
+//             todayAppointments: today.length,
+//             totalAppointments: all.length,
+//             totalPatients: uniquePatients.size,
+//             totalRevenue: revenue,
+//           })
+//           setLoading(false)
+//         }
+//       } catch (error) {
+//         console.error('Error fetching dashboard data:', error)
+//         if (isMounted) {
+//           setLoading(false)
+//         }
+//       }
 //     }
-//   }
+    
+//     fetchDashboardData()
+    
+//     return () => {
+//       isMounted = false
+//     }
+//   }, [])
 
 //   const quickActions = [
 //     { icon: <FaCalendarAlt />, title: 'Today\'s Schedule', link: '/doctor/appointments', color: 'from-blue-500 to-blue-600' },
@@ -175,13 +185,10 @@
 
 
 
-
-
-
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { FaCalendarAlt, FaUsers, FaRupeeSign, FaClock, FaChevronRight, FaFilePrescription } from 'react-icons/fa'
+import { FaCalendarAlt, FaUsers, FaRupeeSign, FaClock, FaChevronRight, FaFilePrescription, FaFlask, FaXRay } from 'react-icons/fa'
 import { useAuth } from '../../hooks/useAuth'
 import doctorService from '../../services/doctorService'
 import LoadingSpinner from '../Common/LoadingSpinner'
@@ -199,7 +206,6 @@ const DoctorDashboard = () => {
   const [recentAppointments, setRecentAppointments] = useState([])
   const [loading, setLoading] = useState(true)
 
-  // ✅ Cleanup flag ke saath Effect - fetchDashboardData ko ANDAR define kiya
   useEffect(() => {
     let isMounted = true
     
@@ -250,6 +256,10 @@ const DoctorDashboard = () => {
     { icon: <FaFilePrescription />, title: 'Add Prescription', link: '/doctor/prescription/new', color: 'from-green-500 to-green-600' },
     { icon: <FaClock />, title: 'Set Availability', link: '/doctor/availability', color: 'from-purple-500 to-purple-600' },
     { icon: <FaUsers />, title: 'Patient History', link: '/doctor/appointments', color: 'from-orange-500 to-orange-600' },
+    // ✅ NEW: Lab Tests Card
+    { icon: <FaFlask />, title: 'Lab Tests', link: '/doctor/lab-tests', color: 'from-indigo-500 to-purple-600' },
+    // ✅ NEW: Radiology Tests Card
+    { icon: <FaXRay />, title: 'Radiology Tests', link: '/doctor/radiology-tests', color: 'from-cyan-500 to-blue-600' },
   ]
 
   if (loading) return <LoadingSpinner fullScreen />

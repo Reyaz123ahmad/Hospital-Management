@@ -1,3 +1,4 @@
+
 // import React, { useState, useEffect } from 'react'
 // import { motion } from 'framer-motion'
 // import { Link } from 'react-router-dom'
@@ -21,12 +22,51 @@
 //   const [loading, setLoading] = useState(true)
 //   const [profile, setProfile] = useState(null)
 
+//   // ✅ Cleanup flag ke saath Effect - fetchDashboardData ko ANDAR define kiya
 //   useEffect(() => {
+//     let isMounted = true
+    
+//     const fetchDashboardData = async () => {
+//       setLoading(true)
+//       try {
+//         const [appointmentsRes, prescriptionsRes, profileRes] = await Promise.all([
+//           appointmentService.getUpcoming(),
+//           patientService.getPrescriptions(),
+//           patientService.getProfile()
+//         ])
+
+//         if (isMounted) {
+//           const upcoming = appointmentsRes.data.appointments || []
+//           const prescriptions = prescriptionsRes.data.prescriptions || []
+          
+//           setUpcomingAppointments(upcoming.slice(0, 5))
+//           setRecentPrescriptions(prescriptions.slice(0, 5))
+//           setProfile(profileRes.data.patient)
+          
+//           setStats({
+//             upcomingAppointments: upcoming.length,
+//             totalAppointments: appointmentsRes.data.count || 0,
+//             prescriptions: prescriptions.length,
+//             reviews: 0
+//           })
+//           setLoading(false)
+//         }
+//       } catch (error) {
+//         console.error('Error fetching dashboard data:', error)
+//         if (isMounted) {
+//           setLoading(false)
+//         }
+//       }
+//     }
+    
 //     fetchDashboardData()
+    
+//     return () => {
+//       isMounted = false
+//     }
 //   }, [])
 
-//   const fetchDashboardData = async () => {
-//     setLoading(true)
+//   const refreshDashboardData = async () => {
 //     try {
 //       const [appointmentsRes, prescriptionsRes, profileRes] = await Promise.all([
 //         appointmentService.getUpcoming(),
@@ -48,9 +88,7 @@
 //         reviews: 0
 //       })
 //     } catch (error) {
-//       console.error('Error fetching dashboard data:', error)
-//     } finally {
-//       setLoading(false)
+//       console.error('Error refreshing dashboard data:', error)
 //     }
 //   }
 
@@ -224,17 +262,10 @@
 
 
 
-
-
-
-
-
-
-
 import React, { useState, useEffect } from 'react'
 import { motion } from 'framer-motion'
 import { Link } from 'react-router-dom'
-import { FaCalendarAlt, FaFilePrescription, FaUserMd, FaStar, FaClock, FaChevronRight } from 'react-icons/fa'
+import { FaCalendarAlt, FaFilePrescription, FaUserMd, FaStar, FaClock, FaChevronRight, FaFlask, FaXRay, FaFileAlt } from 'react-icons/fa'
 import { useAuth } from '../../hooks/useAuth'
 import appointmentService from '../../services/appointmentService'
 import patientService from '../../services/patientService'
@@ -254,7 +285,6 @@ const PatientDashboard = () => {
   const [loading, setLoading] = useState(true)
   const [profile, setProfile] = useState(null)
 
-  // ✅ Cleanup flag ke saath Effect - fetchDashboardData ko ANDAR define kiya
   useEffect(() => {
     let isMounted = true
     
@@ -298,37 +328,18 @@ const PatientDashboard = () => {
     }
   }, [])
 
-  const refreshDashboardData = async () => {
-    try {
-      const [appointmentsRes, prescriptionsRes, profileRes] = await Promise.all([
-        appointmentService.getUpcoming(),
-        patientService.getPrescriptions(),
-        patientService.getProfile()
-      ])
-
-      const upcoming = appointmentsRes.data.appointments || []
-      const prescriptions = prescriptionsRes.data.prescriptions || []
-      
-      setUpcomingAppointments(upcoming.slice(0, 5))
-      setRecentPrescriptions(prescriptions.slice(0, 5))
-      setProfile(profileRes.data.patient)
-      
-      setStats({
-        upcomingAppointments: upcoming.length,
-        totalAppointments: appointmentsRes.data.count || 0,
-        prescriptions: prescriptions.length,
-        reviews: 0
-      })
-    } catch (error) {
-      console.error('Error refreshing dashboard data:', error)
-    }
-  }
-
+  // ✅ NEW: Updated Quick Actions with Lab + Radiology
   const quickActions = [
     { icon: <FaCalendarAlt />, title: 'Book Appointment', link: '/patient/book-appointment', color: 'from-blue-500 to-blue-600' },
     { icon: <FaUserMd />, title: 'Find Doctors', link: '/doctors', color: 'from-green-500 to-green-600' },
     { icon: <FaFilePrescription />, title: 'My Prescriptions', link: '/patient/prescriptions', color: 'from-purple-500 to-purple-600' },
     { icon: <FaStar />, title: 'Write Review', link: '/patient/reviews', color: 'from-yellow-500 to-yellow-600' },
+    // ✅ NEW: Lab Tests Card
+    { icon: <FaFlask />, title: 'My Lab Tests', link: '/patient/lab-tests', color: 'from-indigo-500 to-purple-600' },
+    // ✅ NEW: Radiology Tests Card
+    { icon: <FaXRay />, title: 'My Radiology Tests', link: '/patient/radiology-tests', color: 'from-cyan-500 to-blue-600' },
+    // ✅ NEW: Reports Card
+    { icon: <FaFileAlt />, title: 'My Reports', link: '/patient/lab-reports', color: 'from-emerald-500 to-teal-600' },
   ]
 
   if (loading) return <LoadingSpinner fullScreen />

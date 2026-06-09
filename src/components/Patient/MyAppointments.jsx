@@ -1,3 +1,8 @@
+
+
+
+
+
 // import React, { useState, useEffect } from 'react'
 // import { motion } from 'framer-motion'
 // import { FaCalendarAlt, FaClock, FaUserMd, FaRupeeSign, FaEye, FaFilePrescription, FaTimesCircle, FaCalendarPlus } from 'react-icons/fa'
@@ -18,12 +23,41 @@
 //   const [showCancelModal, setShowCancelModal] = useState(false)
 //   const [cancelLoading, setCancelLoading] = useState(false)
 
+//   // ✅ Cleanup flag ke saath Effect - fetchAppointments ko ANDAR define kiya
 //   useEffect(() => {
+//     let isMounted = true
+    
+//     const fetchAppointments = async () => {
+//       setLoading(true)
+//       try {
+//         let response
+//         if (activeTab === 'upcoming') {
+//           response = await appointmentService.getUpcoming()
+//         } else if (activeTab === 'past') {
+//           response = await appointmentService.getPast()
+//         } else {
+//           response = await appointmentService.getMyAppointments()
+//         }
+//         if (isMounted) {
+//           setAppointments(response.data.appointments || [])
+//           setLoading(false)
+//         }
+//       } catch (error) {
+//         console.error('Error fetching appointments:', error)
+//         if (isMounted) {
+//           setLoading(false)
+//         }
+//       }
+//     }
+    
 //     fetchAppointments()
+    
+//     return () => {
+//       isMounted = false
+//     }
 //   }, [activeTab])
 
-//   const fetchAppointments = async () => {
-//     setLoading(true)
+//   const refreshAppointments = async () => {
 //     try {
 //       let response
 //       if (activeTab === 'upcoming') {
@@ -35,9 +69,7 @@
 //       }
 //       setAppointments(response.data.appointments || [])
 //     } catch (error) {
-//       console.error('Error fetching appointments:', error)
-//     } finally {
-//       setLoading(false)
+//       console.error('Error refreshing appointments:', error)
 //     }
 //   }
 
@@ -51,9 +83,11 @@
 //       await appointmentService.cancel(selectedAppointment._id, cancelReason)
 //       toast.success('Appointment cancelled successfully')
 //       setShowCancelModal(false)
-//       fetchAppointments()
+//       setCancelReason('')
+//       await refreshAppointments()
 //     } catch (error) {
 //       console.error('Error cancelling appointment:', error)
+//       toast.error('Failed to cancel appointment')
 //     } finally {
 //       setCancelLoading(false)
 //     }
@@ -69,6 +103,8 @@
 //     { id: 'past', label: 'Past' },
 //     { id: 'all', label: 'All' }
 //   ]
+
+//   if (loading) return <LoadingSpinner />
 
 //   return (
 //     <div className="min-h-screen bg-gray-50 py-8">
@@ -101,9 +137,7 @@
 //           </div>
 
 //           <div className="p-6">
-//             {loading ? (
-//               <LoadingSpinner />
-//             ) : appointments.length === 0 ? (
+//             {appointments.length === 0 ? (
 //               <div className="text-center py-12">
 //                 <p className="text-gray-500">No {activeTab} appointments found</p>
 //               </div>
@@ -226,7 +260,7 @@
 //             value={cancelReason}
 //             onChange={(e) => setCancelReason(e.target.value)}
 //             rows="3"
-//             className="w-full px-3 py-2 border rounded-lg resize-none"
+//             className="w-full px-3 py-2 border rounded-lg resize-none focus:ring-2 focus:ring-primary-500 focus:border-transparent"
 //           />
 //           <div className="flex gap-3">
 //             <Button variant="secondary" onClick={() => setShowCancelModal(false)}>No, Go Back</Button>
@@ -239,14 +273,6 @@
 // }
 
 // export default MyAppointments
-
-
-
-
-
-
-
-
 
 
 
@@ -270,7 +296,6 @@ const MyAppointments = () => {
   const [showCancelModal, setShowCancelModal] = useState(false)
   const [cancelLoading, setCancelLoading] = useState(false)
 
-  // ✅ Cleanup flag ke saath Effect - fetchAppointments ko ANDAR define kiya
   useEffect(() => {
     let isMounted = true
     
@@ -340,9 +365,12 @@ const MyAppointments = () => {
     }
   }
 
-  const handleReschedule = async (appointment) => {
-    // Navigate to reschedule page or open modal
-    toast.info('Reschedule feature coming soon')
+  // ✅ FIXED: toast.info replaced with toast
+  const handleReschedule = (appointment) => {
+    // TODO: Implement reschedule functionality
+    console.log('Reschedule clicked for appointment:', appointment._id)
+    toast('Reschedule feature will be available soon')
+    // Later: navigate(`/appointments/${appointment._id}/reschedule`)
   }
 
   const tabs = [

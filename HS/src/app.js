@@ -38,14 +38,20 @@ app.use(express.static('public'));
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
-app.use('/api/doctors', require('./routes/doctorRoutes'));
+app.use('/api/doctor', require('./routes/doctorRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
 app.use('/api/symptoms', require('./routes/symptomRoutes'));
-app.use('/api/patients', require('./routes/patientRoutes'));
+app.use('/api/patient', require('./routes/patientRoutes'));
 app.use('/api/admin', require('./routes/adminRoutes'));
 app.use('/api/reviews', require('./routes/reviewRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/admin', require('./routes/adminRoutes'));
 
+app.use('/api/lab', require('./routes/labRoutes'));
+
+app.use('/api/radiology', require('./routes/radiologyRoutes'));
+
+app.use('/api/salary', require('./routes/salaryRoutes'));
 // Health check endpoint
 app.get('/health', (req, res) => {
   res.status(200).json({

@@ -22,6 +22,16 @@ const adminService = {
   getAppointmentReport: (startDate, endDate) => api.get(`/admin/reports/appointments?startDate=${startDate}&endDate=${endDate}`),
   getRevenueReport: (startDate, endDate) => api.get(`/admin/reports/revenue?startDate=${startDate}&endDate=${endDate}`),
   getDoctorPerformance: () => api.get('/admin/reports/doctors'),
+
+  // ==================== LAB MANAGEMENT (Admin) ====================
+  getAllLabTests: () => api.get('/admin/lab-tests'),
+  getAllLabReports: () => api.get('/admin/lab-reports'),
+  
+  // ==================== RADIOLOGY MANAGEMENT (Admin) ====================
+  getAllRadiologyTests: () => api.get('/admin/radiology-tests'),
+  getAllRadiologyReports: () => api.get('/admin/radiology-reports'),
+
+
 }
 
 export default adminService

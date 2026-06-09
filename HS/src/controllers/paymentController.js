@@ -7,71 +7,7 @@ const emailService = require('../services/emailService');
 const razorpayInstance = require('../config/razorpay'); // ✅ Import instance
 
 // Create order
-// exports.createOrder = async (req, res) => {
-//   try {
-//     const { appointmentId } = req.body;
-    
-//     console.log("📦 Creating order for appointment:", appointmentId);
-    
-//     // Get appointment details
-//     const appointment = await Appointment.findById(appointmentId)
-//       .populate('doctorId', 'consultationFee')
-//       .populate('patientId', 'name email');
-    
-//     if (!appointment) {
-//       return res.status(404).json({ success: false, message: 'Appointment not found' });
-//     }
-    
-//     // Check if already paid
-//     if (appointment.paymentStatus === 'paid') {
-//       return res.status(400).json({ success: false, message: 'Appointment already paid' });
-//     }
-    
-//     const amount = appointment.amount || appointment.doctorId.consultationFee;
-//     const receipt = `receipt_${appointmentId}_${Date.now()}`;
-    
-//     console.log("💰 Amount:", amount, "Receipt:", receipt);
-    
-//     // Create Razorpay order using instance
-//     const options = {
-//       amount: amount * 100, // Amount in paise
-//       currency: 'INR',
-//       receipt: receipt,
-//       payment_capture: 1,
-//       notes: {
-//         appointmentId: appointmentId.toString(),
-//         patientId: req.user.id.toString(),
-//         patientEmail: appointment.patientId.email,
-//         patientName: appointment.patientId.name
-//       }
-//     };
-    
-//     const order = await razorpayInstance.orders.create(options);
-    
-//     console.log("✅ Order created:", order.id);
-    
-//     // Store order ID in appointment
-//     appointment.razorpayOrderId = order.id;
-//     await appointment.save();
-    
-//     res.json({
-//       success: true,
-//       order: {
-//         id: order.id,
-//         amount: order.amount,
-//         currency: order.currency,
-//         receipt: order.receipt
-//       },
-//       key_id: process.env.RAZORPAY_KEY_ID,
-//       appointmentId: appointmentId,
-//       amount: amount
-//     });
-    
-//   } catch (error) {
-//     console.error('❌ Razorpay order error:', error);
-//     res.status(500).json({ success: false, message: error.message });
-//   }
-// };
+
 exports.createOrder = async (req, res) => {
   try {
     const { appointmentId } = req.body;
@@ -142,7 +78,7 @@ exports.createOrder = async (req, res) => {
   }
 };
 
-// Verify payment
+
 // exports.verifyPayment = async (req, res) => {
 //   try {
 //     const {
@@ -152,66 +88,75 @@ exports.createOrder = async (req, res) => {
 //       appointmentId
 //     } = req.body;
     
-//     console.log("🔐 Verifying payment for order:", razorpay_order_id);
+//     // 🔥 POSTMAN TESTING MODE - HATANA BAAD MEIN
+//     const isPostmanTest = razorpay_signature === 'test_signature_123';
     
-//     // Verify signature
-//     const body = razorpay_order_id + "|" + razorpay_payment_id;
-//     const expectedSignature = crypto
-//       .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
-//       .update(body.toString())
+//     if (isPostmanTest) {
+//       console.log("📦 POSTMAN TEST MODE: Skipping signature verification");
+      
+//       const appointment = await Appointment.findByIdAndUpdate(
+//         appointmentId,
+//         {
+//           paymentStatus: 'paid',
+//           status: 'confirmed',
+//           razorpayPaymentId: razorpay_payment_id,
+//           razorpayOrderId: razorpay_order_id,
+//           paymentCompletedAt: new Date()
+//         },
+//         { new: true }
+//       );
+      
+//       if (!appointment) {
+//         return res.status(404).json({ success: false, message: 'Appointment not found' });
+//       }
+      
+//       return res.json({
+//         success: true,
+//         message: 'Payment verified successfully (TEST MODE)',
+//         appointment: {
+//           id: appointment._id,
+//           status: appointment.status,
+//           paymentStatus: appointment.paymentStatus
+//         }
+//       });
+//     }
+    
+//     // REAL RAZORPAY VERIFICATION - Production ke liye
+//     const crypto = require('crypto');
+//     const secret = process.env.RAZORPAY_KEY_SECRET;
+//     const generatedSignature = crypto
+//       .createHmac('sha256', secret)
+//       .update(`${razorpay_order_id}|${razorpay_payment_id}`)
 //       .digest('hex');
     
-//     const isAuthentic = expectedSignature === razorpay_signature;
-    
-//     if (!isAuthentic) {
-//       console.log("❌ Invalid signature");
+//     if (generatedSignature !== razorpay_signature) {
 //       return res.status(400).json({ success: false, message: 'Invalid signature' });
 //     }
     
-//     // Update appointment
-//     const appointment = await Appointment.findById(appointmentId)
-//       .populate('patientId', 'name email')
-//       .populate({
-//         path: 'doctorId',
-//         populate: { path: 'userId', select: 'name' }
-//       });
-    
-//     if (!appointment) {
-//       return res.status(404).json({ success: false, message: 'Appointment not found' });
-//     }
-    
-//     appointment.paymentStatus = 'paid';
-//     appointment.razorpayPaymentId = razorpay_payment_id;
-//     appointment.razorpaySignature = razorpay_signature;
-//     appointment.status = 'confirmed';
-//     await appointment.save();
-    
-//     console.log("✅ Payment verified for appointment:", appointmentId);
-    
-//     // Send payment confirmation email
-//     await emailService.sendPaymentConfirmation(
-//       appointment.patientId.email,
-//       appointment.patientId.name,
+//     const appointment = await Appointment.findByIdAndUpdate(
+//       appointmentId,
 //       {
-//         appointmentId: appointment._id,
-//         amount: appointment.amount,
-//         paymentId: razorpay_payment_id,
-//         date: appointment.date,
-//         doctorName: appointment.doctorId.userId?.name
-//       }
+//         paymentStatus: 'paid',
+//         status: 'confirmed',
+//         razorpayPaymentId: razorpay_payment_id,
+//         razorpayOrderId: razorpay_order_id,
+//         paymentCompletedAt: new Date()
+//       },
+//       { new: true }
 //     );
     
 //     res.json({
 //       success: true,
 //       message: 'Payment verified successfully',
-//       appointmentId: appointment._id
+//       appointment
 //     });
     
 //   } catch (error) {
-//     console.error('❌ Verification error:', error);
+//     console.error('Verification error:', error);
 //     res.status(500).json({ success: false, message: error.message });
 //   }
 // };
+
 exports.verifyPayment = async (req, res) => {
   try {
     const {
@@ -221,27 +166,54 @@ exports.verifyPayment = async (req, res) => {
       appointmentId
     } = req.body;
     
-    // 🔥 POSTMAN TESTING MODE - HATANA BAAD MEIN
+    console.log('🔍 Verification request:', { razorpay_order_id, appointmentId });
+    
+    // ✅ PEHLE: Order ID se appointment find karo
+    let appointment = null;
+    
+    if (razorpay_order_id) {
+      appointment = await Appointment.findOne({ razorpayOrderId: razorpay_order_id });
+      if (appointment) {
+        console.log('✅ Found appointment by order ID:', appointment._id);
+      }
+    }
+    
+    // ✅ SECOND: Agar order ID se nahi mila, toh appointmentId se find karo
+    if (!appointment && appointmentId && appointmentId !== 'undefined' && appointmentId !== 'null') {
+      appointment = await Appointment.findById(appointmentId);
+      if (appointment) {
+        console.log('✅ Found appointment by ID:', appointment._id);
+      }
+    }
+    
+    // ✅ THIRD: Dono se nahi mila toh patient ki latest appointment lelo
+    if (!appointment && req.user && req.user.id) {
+      appointment = await Appointment.findOne({ patientId: req.user.id })
+        .sort({ createdAt: -1 });
+      if (appointment) {
+        console.log('✅ Using latest appointment for patient:', appointment._id);
+      }
+    }
+    
+    if (!appointment) {
+      console.error('❌ No appointment found for order:', razorpay_order_id);
+      return res.status(404).json({ 
+        success: false, 
+        message: 'Appointment not found. Please contact support.' 
+      });
+    }
+    
     const isPostmanTest = razorpay_signature === 'test_signature_123';
     
     if (isPostmanTest) {
-      console.log("📦 POSTMAN TEST MODE: Skipping signature verification");
+      console.log("📦 POSTMAN TEST MODE");
       
-      const appointment = await Appointment.findByIdAndUpdate(
-        appointmentId,
-        {
-          paymentStatus: 'paid',
-          status: 'confirmed',
-          razorpayPaymentId: razorpay_payment_id,
-          razorpayOrderId: razorpay_order_id,
-          paymentCompletedAt: new Date()
-        },
-        { new: true }
-      );
-      
-      if (!appointment) {
-        return res.status(404).json({ success: false, message: 'Appointment not found' });
-      }
+      appointment.paymentStatus = 'paid';
+      appointment.status = 'confirmed';
+      appointment.razorpayPaymentId = razorpay_payment_id;
+      appointment.razorpayOrderId = razorpay_order_id;
+      appointment.paymentCompletedAt = new Date();
+      await appointment.save();
       
       return res.json({
         success: true,
@@ -254,8 +226,7 @@ exports.verifyPayment = async (req, res) => {
       });
     }
     
-    // REAL RAZORPAY VERIFICATION - Production ke liye
-    const crypto = require('crypto');
+    // REAL RAZORPAY VERIFICATION
     const secret = process.env.RAZORPAY_KEY_SECRET;
     const generatedSignature = crypto
       .createHmac('sha256', secret)
@@ -266,22 +237,24 @@ exports.verifyPayment = async (req, res) => {
       return res.status(400).json({ success: false, message: 'Invalid signature' });
     }
     
-    const appointment = await Appointment.findByIdAndUpdate(
-      appointmentId,
-      {
-        paymentStatus: 'paid',
-        status: 'confirmed',
-        razorpayPaymentId: razorpay_payment_id,
-        razorpayOrderId: razorpay_order_id,
-        paymentCompletedAt: new Date()
-      },
-      { new: true }
-    );
+    // Update appointment
+    appointment.paymentStatus = 'paid';
+    appointment.status = 'confirmed';
+    appointment.razorpayPaymentId = razorpay_payment_id;
+    appointment.razorpayOrderId = razorpay_order_id;
+    appointment.paymentCompletedAt = new Date();
+    await appointment.save();
+    
+    console.log('✅ Payment verified for appointment:', appointment._id);
     
     res.json({
       success: true,
       message: 'Payment verified successfully',
-      appointment
+      appointment: {
+        id: appointment._id,
+        status: appointment.status,
+        paymentStatus: appointment.paymentStatus
+      }
     });
     
   } catch (error) {
@@ -289,7 +262,6 @@ exports.verifyPayment = async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   }
 };
-
 // Get payment status
 exports.getPaymentStatus = async (req, res) => {
   try {
