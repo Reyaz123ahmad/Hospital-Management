@@ -84,56 +84,6 @@ const BookAppointment = () => {
     )
   }
 
-  // const handleBook = async () => {
-  //   if (!selectedDoctor || !selectedDate || !selectedSlot) {
-  //     toast.error('Please fill all required fields')
-  //     return
-  //   }
-
-  //   setLoading(true)
-  //   try {
-  //     const response = await appointmentService.bookAppointment({
-  //       doctorId: selectedDoctor._id,
-  //       date: selectedDate,
-  //       timeSlot: selectedSlot,
-  //       symptoms: selectedSymptoms,
-  //       notes
-  //     })
-
-  //     console.log('✅ Booking response:', response.data)
-      
-  //     // ✅ FIX: Get appointment ID correctly
-  //     const appointmentData = response.data.appointment
-  //     const appointmentId = appointmentData?._id || appointmentData?.id || response.data.appointmentId
-      
-  //     console.log('✅ Appointment ID:', appointmentId)
-      
-  //     if (!appointmentId) {
-  //       toast.error('Failed to get appointment ID')
-  //       setLoading(false)
-  //       return
-  //     }
-      
-  //     toast.success('Appointment booked! Proceed to payment')
-      
-  //     // ✅ Store in localStorage as backup
-  //     localStorage.setItem('currentAppointmentId', appointmentId)
-  //     sessionStorage.setItem('appointmentId', appointmentId)
-      
-  //     navigate(`/payment/${appointmentId}`, {
-  //       state: { 
-  //         appointment: appointmentData, 
-  //         order: response.data.order, 
-  //         key_id: response.data.key_id 
-  //       }
-  //     })
-  //   } catch (error) {
-  //     console.error('Error booking appointment:', error)
-  //     toast.error(error.response?.data?.message || 'Failed to book appointment')
-  //   } finally {
-  //     setLoading(false)
-  //   }
-  // }
   const handleBook = async () => {
   if (!selectedDoctor || !selectedDate || !selectedSlot) {
     toast.error('Please fill all required fields')
@@ -150,20 +100,8 @@ const BookAppointment = () => {
       notes
     })
 
-    // 🔍 YEH SAB LOG DALO
-    console.log('========== BOOKING RESPONSE ==========')
-    console.log('1. Full response object:', response)
-    console.log('2. Response data:', response.data)
-    console.log('3. Response data type:', typeof response.data)
-    console.log('4. appointment in data:', response.data.appointment)
-    console.log('5. appointment._id:', response.data.appointment?._id)
-    console.log('6. appointment.id:', response.data.appointment?.id)
-    console.log('7. Complete appointment object:', JSON.stringify(response.data.appointment, null, 2))
-    console.log('=======================================')
-
     const appointmentId = response.data.appointment?._id || response.data.appointment?.id
     
-    console.log('🎯 Final Appointment ID:', appointmentId)
     
     if (!appointmentId) {
       toast.error('Failed to get appointment ID')
